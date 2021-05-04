@@ -162,12 +162,18 @@ class SMBFS(FS):
         # * `everyone` (used for UNIX `others` mode)
         # * `owner` (used for UNIX `user` mode, falls back to `everyone`)
         # * `group` (used for UNIX `group` mode, falls back to `everyone`)
-        other_ace = next((ace for ace in sd.dacl.aces
-            if str(ace.sid).startswith(smb.security_descriptors.SID_EVERYONE)), None)
-        owner_ace = next((ace for ace in sd.dacl.aces
-            if str(ace.sid).startswith(str(sd.owner))), other_ace)
-        group_ace = next((ace for ace in sd.dacl.aces
-            if str(ace.sid).startswith(str(sd.group))), other_ace)
+
+        other_ace = None
+        owner_ace = None
+        group_ace = None
+
+        if sd.dacl is not None: # e.g. 'nt acl support = no'
+            other_ace = next((ace for ace in sd.dacl.aces
+                if str(ace.sid).startswith(smb.security_descriptors.SID_EVERYONE)), None)
+            owner_ace = next((ace for ace in sd.dacl.aces
+                if str(ace.sid).startswith(str(sd.owner))), other_ace)
+            group_ace = next((ace for ace in sd.dacl.aces
+                if str(ace.sid).startswith(str(sd.group))), other_ace)
 
         # Defines the masks used to check for the attributes
         attributes = {
